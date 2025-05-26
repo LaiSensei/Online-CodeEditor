@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { sendEmailVerification } from 'firebase/auth'
+import { auth } from '../config/firebase'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -8,6 +10,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState('')
   const navigate = useNavigate()
   const { signup } = useAuth()
 
@@ -20,11 +23,18 @@ export default function Register() {
 
     try {
       setError('')
+      setSuccess('')
       setLoading(true)
       await signup(email, password)
-      navigate('/')
-    } catch (err) {
-      setError('Failed to create an account')
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser)
+        setSuccess('Registration successful! Please check your email for a verification link.')
+      }
+      // Optionally, you can delay navigation until after verification
+      // navigate('/')
+    } catch (err: any) {
+      setError(err.message || 'Failed to create an account')
+      console.error(err)
     }
     setLoading(false)
   }
@@ -41,6 +51,11 @@ export default function Register() {
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+          {success && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">{success}</div>
             </div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">

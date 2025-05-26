@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import ProblemView from './pages/ProblemView'
+import Layout from './components/Layout'
 
 function App() {
   return (
@@ -18,7 +19,9 @@ function App() {
               path="/"
               element={
                 <PrivateRoute>
-                  <Dashboard />
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
                 </PrivateRoute>
               }
             />
@@ -26,7 +29,9 @@ function App() {
               path="/problem/:id"
               element={
                 <PrivateRoute>
-                  <ProblemView />
+                  <Layout>
+                    <ProblemView />
+                  </Layout>
                 </PrivateRoute>
               }
             />
