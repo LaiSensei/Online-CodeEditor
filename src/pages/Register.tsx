@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { sendEmailVerification } from 'firebase/auth'
 import { auth } from '../config/firebase'
@@ -11,7 +11,6 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
-  const navigate = useNavigate()
   const { signup } = useAuth()
 
   async function handleSubmit(e: React.FormEvent) {
