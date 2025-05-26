@@ -6,6 +6,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import ProblemView from './pages/ProblemView'
 import Layout from './components/Layout'
+import ForgotPassword from './pages/ForgotPassword'
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </div>
       </AuthProvider>

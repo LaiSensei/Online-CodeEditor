@@ -5,6 +5,7 @@ import { db } from '../config/firebase'
 import { LiveProvider, LiveError, LivePreview } from 'react-live'
 import { useAuth } from '../contexts/AuthContext'
 import MonacoEditor from '@monaco-editor/react'
+import { Link } from 'react-router-dom'
 
 interface Problem {
   id: string

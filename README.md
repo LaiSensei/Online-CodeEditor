@@ -4,18 +4,21 @@ A modern web application for practicing coding problems with live React code exe
 
 ## Features
 
-- User authentication with Firebase
+- User authentication with Firebase (register, login, logout, email verification, password reset)
 - View and solve coding problems
-- Live React code editor with preview
+- Live React code editor with Monaco Editor and react-live preview
 - Problem difficulty levels
-- Real-time code execution
+- Real-time code execution and error display
+- Submission storage (save your code for each problem)
+- Responsive UI with Tailwind CSS
 
 ## Tech Stack
 
 - React with TypeScript
 - Firebase (Authentication & Firestore)
 - Tailwind CSS for styling
-- react-live for code execution
+- Monaco Editor for code editing
+- react-live for code execution and preview
 - Vite for build tooling
 
 ## Prerequisites
@@ -60,13 +63,29 @@ npm run dev
 
 ```
 src/
-  ├── components/     # Reusable components
-  ├── contexts/       # React contexts
-  ├── pages/         # Page components
-  ├── config/        # Configuration files
-  ├── App.tsx        # Main App component
-  └── main.tsx       # Entry point
+  ├── components/     # Reusable components (Layout, PrivateRoute)
+  ├── contexts/       # React contexts (AuthContext)
+  ├── pages/          # Page components (Login, Register, ForgotPassword, Dashboard, ProblemView)
+  ├── config/         # Firebase configuration
+  ├── App.tsx         # Main App component
+  └── main.tsx        # Entry point
 ```
+
+## Key Features & Implementation
+
+- **Authentication:** Register, login, logout, email verification, and password reset (forgot password) using Firebase Auth.
+- **Problem Viewing:** Problems are stored in Firestore and displayed in a dashboard. Each problem has a title, difficulty, description, and starter code.
+- **Code Editor & Live Preview:** Uses Monaco Editor for a professional editing experience and react-live for live React code execution and preview.
+- **Error Handling:** Syntax and runtime errors are displayed below the editor. Monaco provides inline syntax error highlighting.
+- **Submission Storage:** User code submissions are saved to Firestore with user, problem, code, and timestamp.
+- **Password Reset:** Users can request a password reset email from the login page.
+
+## Limitations & Future Improvements
+
+- **Code Execution:** Only JavaScript/React code is supported in the editor and preview. Code is executed in-browser using react-live and Babel, which is suitable for MVP/demo purposes but not for running untrusted or infinite-loop code securely.
+- **No Automated Correctness Checking:** The platform does not currently run user code against test cases or provide pass/fail feedback. For a production system, you would add a backend code runner (e.g., Judge0) and test case support.
+- **Single Language:** Only JavaScript/React is supported. Multi-language support would require backend integration with a code execution API.
+- **Security:** For a real-world platform, additional sandboxing and security measures would be needed for code execution.
 
 ## Development
 
