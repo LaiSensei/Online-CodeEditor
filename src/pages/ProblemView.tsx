@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
-import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live'
+import { LiveProvider, LiveError, LivePreview } from 'react-live'
 import { useAuth } from '../contexts/AuthContext'
+import MonacoEditor from '@monaco-editor/react'
 
 interface Problem {
   id: string
@@ -19,6 +20,7 @@ export default function ProblemView() {
   const [loading, setLoading] = useState(true)
   const [code, setCode] = useState('')
   const { currentUser } = useAuth()
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchProblem() {
@@ -39,6 +41,25 @@ export default function ProblemView() {
 
     fetchProblem()
   }, [id])
+
+  const handleSubmit = async () => {
+    if (!currentUser) {
+      setSubmitStatus('You must be logged in to submit.')
+      return
+    }
+    try {
+      await addDoc(collection(db, 'submissions'), {
+        userId: currentUser.uid,
+        problemId: problem?.id,
+        code,
+        createdAt: serverTimestamp(),
+      })
+      setSubmitStatus('Submission saved!')
+    } catch (error) {
+      setSubmitStatus('Failed to save submission.')
+      console.error(error)
+    }
+  }
 
   if (loading) {
     return <div className="text-center">Loading problem...</div>
@@ -68,33 +89,52 @@ export default function ProblemView() {
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="bg-white shadow sm:rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  Code Editor
-                </h3>
-                <LiveProvider code={code} noInline={true}>
-                  <LiveEditor
-                    onChange={setCode}
-                    className="h-[500px] font-mono text-sm"
+          <LiveProvider code={code}>
+            <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Code Editor
+                  </h3>
+                  <MonacoEditor
+                    height="500px"
+                    defaultLanguage="javascript"
+                    theme="vs-dark"
+                    value={code}
+                    onChange={(value) => setCode(value || '')}
+                    options={{
+                      fontSize: 14,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      wordWrap: 'on',
+                    }}
                   />
                   <LiveError className="mt-2 text-red-600" />
-                </LiveProvider>
+                  <button
+                    onClick={handleSubmit}
+                    className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    Submit
+                  </button>
+                  {submitStatus && (
+                    <div className="mt-2 text-sm">
+                      {submitStatus}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-
-            <div className="bg-white shadow sm:rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  Preview
-                </h3>
-                <div className="border rounded-lg p-4 min-h-[500px]">
-                  <LivePreview />
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Preview
+                  </h3>
+                  <div className="border rounded-lg p-4 min-h-[500px]">
+                    <LivePreview />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </LiveProvider>
         </div>
       </div>
     </div>
