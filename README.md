@@ -67,6 +67,7 @@ src/
   ├── contexts/       # React contexts (AuthContext)
   ├── pages/          # Page components (Login, Register, ForgotPassword, Dashboard, ProblemView)
   ├── config/         # Firebase configuration
+  ├── utils/          # Code Sanitization
   ├── App.tsx         # Main App component
   └── main.tsx        # Entry point
 ```
