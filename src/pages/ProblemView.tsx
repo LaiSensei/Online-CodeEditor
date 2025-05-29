@@ -5,6 +5,7 @@ import { db } from '../config/firebase'
 import { LiveProvider, LiveError, LivePreview } from 'react-live'
 import { useAuth } from '../contexts/AuthContext'
 import MonacoEditor from '@monaco-editor/react'
+import { sanitizeCode, isCodeSafe } from '../utils/codeSanitizer'
 
 interface Problem {
   id: string
@@ -21,11 +22,13 @@ export default function ProblemView() {
   const [code, setCode] = useState('')
   const { currentUser } = useAuth()
   const [submitStatus, setSubmitStatus] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [sanitizedCode, setSanitizedCode] = useState('')
+  const [codeError, setCodeError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchProblem() {
       if (!id) return
-
       try {
         const problemDoc = await getDoc(doc(db, 'problems', id))
         if (problemDoc.exists()) {
@@ -38,26 +41,44 @@ export default function ProblemView() {
       }
       setLoading(false)
     }
-
     fetchProblem()
   }, [id])
+
+  // Sanitize code and check safety on every code change
+  useEffect(() => {
+    const sanitized = sanitizeCode(code)
+    setSanitizedCode(sanitized)
+    if (!isCodeSafe(sanitized)) {
+      setCodeError('Code contains potentially unsafe patterns and will not be rendered or submitted.')
+    } else {
+      setCodeError(null)
+    }
+  }, [code])
 
   const handleSubmit = async () => {
     if (!currentUser) {
       setSubmitStatus('You must be logged in to submit.')
       return
     }
+    if (!isCodeSafe(sanitizedCode)) {
+      setSubmitStatus('Submission blocked: code contains unsafe patterns.')
+      return
+    }
     try {
+      setSubmitting(true)
+      setSubmitStatus(null)
       await addDoc(collection(db, 'submissions'), {
         userId: currentUser.uid,
         problemId: problem?.id,
-        code,
+        code: sanitizedCode,
         createdAt: serverTimestamp(),
       })
       setSubmitStatus('Submission saved!')
     } catch (error) {
       setSubmitStatus('Failed to save submission.')
       console.error(error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -89,7 +110,7 @@ export default function ProblemView() {
             </div>
           </div>
 
-          <LiveProvider code={code}>
+          <LiveProvider code={codeError ? '' : sanitizedCode}>
             <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
               <div className="bg-white shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
@@ -109,12 +130,23 @@ export default function ProblemView() {
                       wordWrap: 'on',
                     }}
                   />
+                  {codeError && (
+                    <div className="mt-2 text-red-600 text-sm">{codeError}</div>
+                  )}
                   <LiveError className="mt-2 text-red-600" />
                   <button
                     onClick={handleSubmit}
-                    className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                    disabled={submitting || !!codeError}
+                    className={`mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center ${submitting || codeError ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
-                    Submit
+                    {submitting ? (
+                      <>
+                        <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit'
+                    )}
                   </button>
                   {submitStatus && (
                     <div className="mt-2 text-sm">
